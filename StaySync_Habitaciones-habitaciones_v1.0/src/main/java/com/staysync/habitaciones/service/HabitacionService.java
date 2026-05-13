@@ -111,6 +111,7 @@ public class HabitacionService {
                 .numero(h.getNumero())
                 .piso(h.getPiso())
                 .tipoNombre(h.getTipo() != null ? h.getTipo().getNombre() : null)
+                .capacidad(h.getTipo() != null ? h.getTipo().getCapacidad() : null)
                 .estado(h.getEstado())
                 .descripcion(h.getDescripcion())
                 .precioPorNoche(h.getPrecioPorNoche())

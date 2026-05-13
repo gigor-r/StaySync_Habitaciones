@@ -14,6 +14,7 @@ public class HabitacionResponse {
     private String numero;
     private Integer piso;
     private String tipoNombre;
+    private Integer capacidad;
     private EstadoHabitacion estado;
     private String descripcion;
     private BigDecimal precioPorNoche;

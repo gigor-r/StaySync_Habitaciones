@@ -71,6 +71,6 @@ public class Habitacion {
     protected void onUpdate() { updatedAt = LocalDateTime.now(); }
 
     public enum EstadoHabitacion {
-        DISPONIBLE, OCUPADA, MANTENIMIENTO, FUERA_DE_SERVICIO
+        DISPONIBLE, OCUPADA, EN_LIMPIEZA, MANTENIMIENTO, FUERA_DE_SERVICIO
     }
 }

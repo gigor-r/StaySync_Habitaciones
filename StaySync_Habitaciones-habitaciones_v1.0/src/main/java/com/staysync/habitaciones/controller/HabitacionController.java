@@ -56,7 +56,18 @@ public class HabitacionController {
     @Operation(summary = "Cambiar estado de una habitación")
     public ResponseEntity<HabitacionResponse> cambiarEstado(@PathVariable Long id,
                                                              @RequestBody Map<String, String> body) {
-        EstadoHabitacion estado = EstadoHabitacion.valueOf(body.get("estado"));
+        String estadoRaw = body != null ? body.get("estado") : null;
+        if (estadoRaw == null || estadoRaw.isBlank()) {
+            throw new IllegalArgumentException("El campo 'estado' es obligatorio.");
+        }
+        EstadoHabitacion estado;
+        try {
+            estado = EstadoHabitacion.valueOf(estadoRaw.trim().toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(
+                "Estado inválido: '" + estadoRaw + "'. Valores aceptados: " +
+                java.util.Arrays.toString(EstadoHabitacion.values()));
+        }
         return ResponseEntity.ok(habitacionService.cambiarEstado(id, estado));
     }
 

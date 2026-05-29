@@ -29,9 +29,13 @@ public class HabitacionController {
     }
 
     @GetMapping("/disponibles")
-    @Operation(summary = "Listar habitaciones disponibles")
-    public ResponseEntity<List<HabitacionResponse>> listarDisponibles() {
-        return ResponseEntity.ok(habitacionService.listarDisponibles());
+    @Operation(summary = "Listar habitaciones disponibles con filtros opcionales",
+               description = "Parámetros opcionales: capacidad (mínima), amenidad (nombre parcial), sort (precio_asc|precio_desc)")
+    public ResponseEntity<List<HabitacionResponse>> listarDisponibles(
+            @RequestParam(required = false) Integer capacidad,
+            @RequestParam(required = false) String amenidad,
+            @RequestParam(defaultValue = "precio_asc") String sort) {
+        return ResponseEntity.ok(habitacionService.buscarDisponibles(capacidad, amenidad, sort));
     }
 
     @GetMapping("/{id}")

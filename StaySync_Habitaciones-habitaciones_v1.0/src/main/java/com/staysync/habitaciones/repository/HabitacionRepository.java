@@ -13,4 +13,7 @@ public interface HabitacionRepository extends JpaRepository<Habitacion, Long> {
     List<Habitacion> findByEstadoAndActivaTrue(EstadoHabitacion estado);
     List<Habitacion> findByActivaTrue();
     Optional<Habitacion> findByIdAndActivaTrue(Long id);
+
+    @Query("SELECT DISTINCT h FROM Habitacion h JOIN FETCH h.amenidades WHERE h.estado = 'DISPONIBLE' AND h.activa = true")
+    List<Habitacion> findDisponiblesConAmenidades();
 }

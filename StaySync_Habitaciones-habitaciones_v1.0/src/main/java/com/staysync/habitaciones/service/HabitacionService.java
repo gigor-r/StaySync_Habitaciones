@@ -17,9 +17,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +54,31 @@ public class HabitacionService {
         return habitacionRepository.findByEstadoAndActivaTrue(EstadoHabitacion.DISPONIBLE).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
+    }
+
+    public List<HabitacionResponse> buscarDisponibles(Integer capacidad, String amenidad, String sort) {
+        // Si se filtra por amenidad cargamos el collection con JOIN FETCH para evitar N+1
+        List<Habitacion> base = (amenidad != null && !amenidad.isBlank())
+                ? habitacionRepository.findDisponiblesConAmenidades()
+                : habitacionRepository.findByEstadoAndActivaTrue(EstadoHabitacion.DISPONIBLE);
+
+        Stream<Habitacion> stream = base.stream();
+
+        if (capacidad != null && capacidad > 0) {
+            stream = stream.filter(h -> h.getTipo() != null && h.getTipo().getCapacidad() >= capacidad);
+        }
+
+        if (amenidad != null && !amenidad.isBlank()) {
+            String q = amenidad.toLowerCase();
+            stream = stream.filter(h -> h.getAmenidades().stream()
+                    .anyMatch(a -> a.getNombre().toLowerCase().contains(q)));
+        }
+
+        Comparator<Habitacion> orden = "precio_desc".equalsIgnoreCase(sort)
+                ? Comparator.comparing(Habitacion::getPrecioPorNoche).reversed()
+                : Comparator.comparing(Habitacion::getPrecioPorNoche);
+
+        return stream.sorted(orden).map(this::toResponse).collect(Collectors.toList());
     }
 
     @Transactional

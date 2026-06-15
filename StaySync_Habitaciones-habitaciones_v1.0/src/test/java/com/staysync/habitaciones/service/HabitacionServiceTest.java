@@ -137,4 +137,79 @@ class HabitacionServiceTest {
         assertThat(habitacion.getActiva()).isFalse();
         verify(habitacionRepository).save(habitacion);
     }
+
+    @Test
+    @DisplayName("listarTodas() - debe retornar solo habitaciones activas")
+    void debeListarSoloActivas() {
+        when(habitacionRepository.findByActivaTrue()).thenReturn(List.of(habitacion));
+
+        List<HabitacionResponse> result = habitacionService.listarTodas();
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getNumero()).isEqualTo("101");
+    }
+
+    @Test
+    @DisplayName("listarTodas() - debe retornar lista vacía si no hay habitaciones activas")
+    void debeRetornarListaVaciaConSinActivas() {
+        when(habitacionRepository.findByActivaTrue()).thenReturn(List.of());
+
+        List<HabitacionResponse> result = habitacionService.listarTodas();
+
+        assertThat(result).isEmpty();
+    }
+
+    @Test
+    @DisplayName("obtenerPorNumero() - debe lanzar excepción si número no existe")
+    void debeLanzarExcepcionNumeroNoEncontrado() {
+        when(habitacionRepository.findByNumero("999")).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> habitacionService.obtenerPorNumero("999"))
+                .isInstanceOf(HabitacionNotFoundException.class);
+    }
+
+    @Test
+    @DisplayName("buscarDisponibles() - debe filtrar por capacidad mínima")
+    void debeFiltrarPorCapacidadMinima() {
+        TipoHabitacion tipoSuite = TipoHabitacion.builder()
+                .id(2L).nombre("Suite").capacidad(4)
+                .precioBase(BigDecimal.valueOf(200)).activo(true).build();
+        Habitacion suite = Habitacion.builder()
+                .id(2L).numero("201").piso(2).tipo(tipoSuite)
+                .estado(EstadoHabitacion.DISPONIBLE)
+                .precioPorNoche(BigDecimal.valueOf(200))
+                .amenidades(new java.util.HashSet<>())
+                .activa(true).build();
+
+        when(habitacionRepository.findByEstadoAndActivaTrue(EstadoHabitacion.DISPONIBLE))
+                .thenReturn(List.of(habitacion, suite));  // habitacion.tipo.capacidad=2, suite=4
+
+        List<HabitacionResponse> result = habitacionService.buscarDisponibles(4, null, "precio_asc");
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getNumero()).isEqualTo("201");
+    }
+
+    @Test
+    @DisplayName("buscarDisponibles() - debe ordenar por precio descendente")
+    void debeOrdenarPorPrecioDescendente() {
+        TipoHabitacion tipoCaro = TipoHabitacion.builder()
+                .id(3L).nombre("Penthouse").capacidad(2)
+                .precioBase(BigDecimal.valueOf(500)).activo(true).build();
+        Habitacion penthouse = Habitacion.builder()
+                .id(3L).numero("501").piso(5).tipo(tipoCaro)
+                .estado(EstadoHabitacion.DISPONIBLE)
+                .precioPorNoche(BigDecimal.valueOf(500))
+                .amenidades(new java.util.HashSet<>())
+                .activa(true).build();
+
+        when(habitacionRepository.findByEstadoAndActivaTrue(EstadoHabitacion.DISPONIBLE))
+                .thenReturn(List.of(habitacion, penthouse));  // 100 y 500
+
+        List<HabitacionResponse> result = habitacionService.buscarDisponibles(null, null, "precio_desc");
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getPrecioPorNoche()).isEqualTo(BigDecimal.valueOf(500));
+        assertThat(result.get(1).getPrecioPorNoche()).isEqualTo(BigDecimal.valueOf(100));
+    }
 }
